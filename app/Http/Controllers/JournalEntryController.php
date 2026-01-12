@@ -37,6 +37,8 @@ class JournalEntryController extends Controller
         if (in_array($sortBy, ['date', 'total_amount', 'entry_number', 'created_at'])) {
             $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
         }
+        
+        $query->latest('id');
 
         $entries = $query->paginate($perPage);
 
