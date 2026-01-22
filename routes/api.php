@@ -38,6 +38,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/journals', [JournalEntryController::class, 'index']);
     Route::get('/journal-lines', [JournalEntryController::class, 'getLines']);
     Route::post('/journals', [JournalEntryController::class, 'store']);
+    Route::post('/journals/quick', [JournalEntryController::class, 'storeQuick']);
     Route::get('/journals/{id}', [JournalEntryController::class, 'show']);
     Route::delete('/journals/{id}', [JournalEntryController::class, 'destroy']);
 

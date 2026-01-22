@@ -75,6 +75,109 @@ class JournalEntryService
         });
     }
 
+    public function createQuickEntry(array $data): JournalEntry
+    {
+        return DB::transaction(function () use ($data) {
+            $mainAccountId = $data['main_account_id'];
+            $oppositeItemsInput = $data['opposite_items']; 
+            $mainAccountItemsInput = $data['main_account_items'] ?? [];
+
+            $items = [];
+            $totalDebit = 0;
+            $totalCredit = 0;
+            $nullItems = [];
+
+            // 1. Process Main Account Items
+            if (empty($mainAccountItemsInput)) {
+                $mainAccountItemsInput = [['description' => $data['main_account_description'] ?? $data['description'], 'amount' => null]];
+            }
+
+            foreach ($mainAccountItemsInput as $mItem) {
+                $amount = isset($mItem['amount']) ? (float)$mItem['amount'] : null;
+                $line = [
+                    'account_id' => $mainAccountId,
+                    'description' => $mItem['description'] ?? ($data['main_account_description'] ?? $data['description']),
+                    'debit' => 0,
+                    'credit' => 0,
+                    'type' => $mItem['type'] ?? 'auto' // 'auto' means we'll decide DR/CR later
+                ];
+
+                if ($amount !== null && $amount > 0) {
+                    $isDebit = ($mItem['type'] ?? 'debit') === 'debit';
+                    $line['debit'] = $isDebit ? $amount : 0;
+                    $line['credit'] = $isDebit ? 0 : $amount;
+                    $totalDebit += $line['debit'];
+                    $totalCredit += $line['credit'];
+                    $items[] = $line;
+                } else {
+                    $nullItems[] = ['index' => count($items), 'side' => 'main', 'type' => $mItem['type'] ?? null];
+                    $items[] = $line;
+                }
+            }
+
+            // 2. Process Opposite Items
+            foreach ($oppositeItemsInput as $oItem) {
+                $amount = isset($oItem['amount']) ? (float)$oItem['amount'] : null;
+                $line = [
+                    'account_id' => $oItem['account_id'],
+                    'description' => $oItem['description'] ?? $data['description'],
+                    'debit' => 0,
+                    'credit' => 0,
+                    'type' => $oItem['type'] ?? 'auto'
+                ];
+
+                if ($amount !== null && $amount > 0) {
+                    $isDebit = ($oItem['type'] ?? 'debit') === 'debit';
+                    $line['debit'] = $isDebit ? $amount : 0;
+                    $line['credit'] = $isDebit ? 0 : $amount;
+                    $totalDebit += $line['debit'];
+                    $totalCredit += $line['credit'];
+                    $items[] = $line;
+                } else {
+                    $nullItems[] = ['index' => count($items), 'side' => 'opposite', 'type' => $oItem['type'] ?? null];
+                    $items[] = $line;
+                }
+            }
+
+            // 3. Balance the Entry
+            $diff = $totalDebit - $totalCredit;
+            if (count($nullItems) > 0) {
+                // For now, support 1 null item for simplicity in balancing
+                // If multiple null items, we distribute to the first one found
+                $target = $nullItems[0];
+                $absDiff = abs($diff);
+                
+                if ($diff > 0) {
+                    // Need more credit
+                    $items[$target['index']]['credit'] = $absDiff;
+                } else {
+                    // Need more debit
+                    $items[$target['index']]['debit'] = $absDiff;
+                }
+            }
+
+            // 4. Final check & format for createEntry
+            $finalItems = array_map(function($item) {
+                return [
+                    'account_id' => $item['account_id'],
+                    'debit' => $item['debit'],
+                    'credit' => $item['credit'],
+                    'description' => $item['description']
+                ];
+            }, $items);
+
+            $entryData = [
+                'company_id' => $data['company_id'],
+                'date' => $data['date'],
+                'description' => $data['description'],
+                'items' => $finalItems,
+                'reference' => $data['reference'] ?? null
+            ];
+
+            return $this->createEntry($entryData);
+        });
+    }
+
     private function generateEntryNumber($companyId): string
     {
         // Simple sequential number generator

@@ -112,6 +112,33 @@ class JournalEntryController extends Controller
         }
     }
 
+    public function storeQuick(Request $request)
+    {
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'description' => 'required|string',
+            'main_account_id' => 'required|exists:chart_of_accounts,id',
+            'main_account_description' => 'nullable|string',
+            'main_account_items' => 'nullable|array',
+            'main_account_items.*.description' => 'nullable|string',
+            'main_account_items.*.amount' => 'nullable|numeric|min:0',
+            'opposite_items' => 'required|array|min:1',
+            'opposite_items.*.account_id' => 'required|exists:chart_of_accounts,id',
+            'opposite_items.*.description' => 'nullable|string',
+            'opposite_items.*.amount' => 'nullable|numeric|min:0',
+            'opposite_items.*.type' => 'required|in:debit,credit',
+        ]);
+
+        $validated['company_id'] = config('app.company_id');
+
+        try {
+            $entry = $this->service->createQuickEntry($validated);
+            return response()->json($entry, 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+    }
+
     public function show($id)
     {
         $entry = JournalEntry::with(['items.account'])->findOrFail($id);
