@@ -39,6 +39,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/journal-lines', [JournalEntryController::class, 'getLines']);
     Route::post('/journals', [JournalEntryController::class, 'store']);
     Route::get('/journals/{id}', [JournalEntryController::class, 'show']);
+    Route::delete('/journals/{id}', [JournalEntryController::class, 'destroy']);
 
     // Reports
     Route::get('/reports/ledger/{accountId}', [ReportController::class, 'getLedger']);

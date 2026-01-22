@@ -97,6 +97,7 @@ class JournalEntryController extends Controller
             'description' => 'required|string',
             'items' => 'required|array|min:2',
             'items.*.account_id' => 'required|exists:chart_of_accounts,id',
+            'items.*.description' => 'nullable|string',
             'items.*.debit' => 'nullable|numeric|min:0',
             'items.*.credit' => 'nullable|numeric|min:0',
         ]);
@@ -113,7 +114,18 @@ class JournalEntryController extends Controller
 
     public function show($id)
     {
-        $entry = JournalEntry::with('items.account')->findOrFail($id);
+        $entry = JournalEntry::with(['items.account'])->findOrFail($id);
         return response()->json($entry);
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $entry = JournalEntry::findOrFail($id);
+            $entry->delete();
+            return response()->json(['message' => 'Journal entry deleted successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 }
