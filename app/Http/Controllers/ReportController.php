@@ -35,9 +35,11 @@ class ReportController extends Controller
     {
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
+        $sortBy = $request->query('sort_by', 'date');
+        $sortOrder = $request->query('sort_order', 'desc');
 
         try {
-            $report = $this->ledgerService->getLedger($accountId, $startDate, $endDate);
+            $report = $this->ledgerService->getLedger($accountId, $startDate, $endDate, $sortBy, $sortOrder);
             return response()->json($report);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 404);

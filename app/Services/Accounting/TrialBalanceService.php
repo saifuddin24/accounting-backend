@@ -62,6 +62,7 @@ class TrialBalanceService
             if ($rowDebit == 0 && $rowCredit == 0) continue; // Skip zero balance accounts
 
             $reportData[] = [
+                'account_id' => $account->id,
                 'account_code' => $account->code,
                 'account_name' => $account->name,
                 'type' => $account->type,

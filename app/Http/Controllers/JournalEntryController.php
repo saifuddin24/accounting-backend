@@ -120,8 +120,10 @@ class JournalEntryController extends Controller
             'main_account_id' => 'required|exists:chart_of_accounts,id',
             'main_account_description' => 'nullable|string',
             'main_account_items' => 'nullable|array',
+            'main_account_items.*.account_id' => 'nullable|exists:chart_of_accounts,id',
             'main_account_items.*.description' => 'nullable|string',
             'main_account_items.*.amount' => 'nullable|numeric|min:0',
+            'main_account_items.*.type' => 'nullable|in:debit,credit',
             'opposite_items' => 'required|array|min:1',
             'opposite_items.*.account_id' => 'required|exists:chart_of_accounts,id',
             'opposite_items.*.description' => 'nullable|string',
@@ -134,6 +136,23 @@ class JournalEntryController extends Controller
         try {
             $entry = $this->service->createQuickEntry($validated);
             return response()->json($entry, 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'date' => 'nullable|date',
+            'description' => 'nullable|string',
+            'reference' => 'nullable|string',
+        ]);
+
+        try {
+            $entry = JournalEntry::findOrFail($id);
+            $updatedEntry = $this->service->updateEntry($entry, $validated);
+            return response()->json($updatedEntry);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }

@@ -11,12 +11,12 @@ class LedgerService
     /**
      * Get Ledger for a specific account.
      */
-    public function getLedger($accountId, $startDate = null, $endDate = null)
+    public function getLedger($accountId, $startDate = null, $endDate = null, $sortBy = 'date', $sortOrder = 'desc')
     {
         $account = ChartOfAccount::findOrFail($accountId);
         
         $startDate = $startDate ? Carbon::parse($startDate)->startOfDay() : Carbon::now()->startOfYear();
-        $endDate = $endDate ? Carbon::parse($endDate)->endOfDay() : Carbon::now()->endOfYear();
+        $endDate = $endDate ? Carbon::parse($endDate)->endOfDay() : Carbon::now()->endOfDay();
 
         // 1. Calculate Opening Balance (Sum of all previous transactions)
         $openingBalanceQuery = JournalItem::where('account_id', $accountId)
@@ -37,12 +37,12 @@ class LedgerService
                 $q->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
                   ->where('status', 'posted');
             })
-            // Important: Order by Date then Entry ID then Item ID to ensure consistent running balance
+            // Important: Order by Date then Entry ID then Item ID to ensure consistent running balance calculation
             ->join('journal_entries', 'journal_items.journal_entry_id', '=', 'journal_entries.id')
             ->orderBy('journal_entries.date')
             ->orderBy('journal_entries.id')
             ->orderBy('journal_items.id')
-            ->select('journal_items.*') // Avoid column collisions
+            ->select('journal_items.*')
             ->get();
 
         // 3. Calculate Running Balance
@@ -63,12 +63,9 @@ class LedgerService
             // Find opposite account(s)
             $isDebit = $debit > 0;
             $oppositeAccounts = $item->journalEntry->items->filter(function($oi) use ($isDebit, $item) {
-                // If this is a debit line, opposite is credit lines and vice versa
-                // If it's a multi-line entry, we want the "other side"
                 return $isDebit ? ($oi->credit > 0) : ($oi->debit > 0);
             });
 
-            // If no clear "other side" (e.g. debit to debit adjustments), show other accounts in entry
             if ($oppositeAccounts->isEmpty()) {
                 $oppositeAccounts = $item->journalEntry->items->where('account_id', '!=', $item->account_id);
             }
@@ -83,15 +80,20 @@ class LedgerService
 
             $ledgerLines[] = [
                 'id' => $item->id,
+                'journal_entry_id' => $item->journal_entry_id,
                 'date' => $item->journalEntry->date->format('Y-m-d'),
                 'entry_number' => $item->journalEntry->entry_number,
                 'opposite_account' => $oppositeAccountName,
                 'description' => $item->description ?? $item->journalEntry->description,
                 'debit' => $debit,
                 'credit' => $credit,
-                'balance' => $runningBalance
+                'balance' => $runningBalance,
             ];
         }
+
+        // 4. Sort the lines
+        $isDescending = $sortOrder === 'desc';
+        $sortedLines = collect($ledgerLines)->sortBy($sortBy, SORT_REGULAR, $isDescending)->values()->all();
 
         return [
             'account' => $account,
@@ -100,7 +102,7 @@ class LedgerService
                 'end' => $endDate->format('Y-m-d'),
             ],
             'opening_balance' => $netOpening,
-            'lines' => $ledgerLines,
+            'lines' => $sortedLines,
             'closing_balance' => $runningBalance
         ];
     }

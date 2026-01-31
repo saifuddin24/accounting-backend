@@ -39,6 +39,8 @@ class BalanceSheetService
         $totalAssets = 0;
         $totalLiabilities = 0;
         $totalEquity = 0;
+        $totalRestrictedAssets = 0;
+        $totalGeneralAssets = 0;
         $netIncome = 0;
 
         foreach ($accounts as $account) {
@@ -48,9 +50,23 @@ class BalanceSheetService
 
             if ($account->type === 'Asset') {
                 $amount = $debit - $credit;
+                $restrictedAmount = $account->is_restricted ? $amount : 0;
+                
                 if ($amount != 0) {
-                    $assets[] = ['account_code' => $account->code, 'account_name' => $account->name, 'amount' => $amount];
+                    $assets[] = [
+                        'account_code' => $account->code, 
+                        'account_name' => $account->name, 
+                        'amount' => $amount,
+                        'is_restricted' => $account->is_restricted,
+                        'restricted_amount' => $restrictedAmount
+                    ];
                     $totalAssets += $amount;
+                    
+                    if ($account->is_restricted) {
+                        $totalRestrictedAssets += $amount;
+                    } else {
+                        $totalGeneralAssets += $amount;
+                    }
                 }
             } elseif ($account->type === 'Liability') {
                 $amount = $credit - $debit;
@@ -85,6 +101,8 @@ class BalanceSheetService
             'as_of' => $asOfDate->format('Y-m-d'),
             'assets' => $assets,
             'total_assets' => $totalAssets,
+            'total_restricted_assets' => $totalRestrictedAssets,
+            'total_general_assets' => $totalGeneralAssets,
             'liabilities' => $liabilities,
             'total_liabilities' => $totalLiabilities,
             'equity' => $equity,

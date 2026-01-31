@@ -95,11 +95,11 @@ class JournalEntryService
             foreach ($mainAccountItemsInput as $mItem) {
                 $amount = isset($mItem['amount']) ? (float)$mItem['amount'] : null;
                 $line = [
-                    'account_id' => $mainAccountId,
+                    'account_id' => $mItem['account_id'] ?? $mainAccountId,
                     'description' => $mItem['description'] ?? ($data['main_account_description'] ?? $data['description']),
                     'debit' => 0,
                     'credit' => 0,
-                    'type' => $mItem['type'] ?? 'auto' // 'auto' means we'll decide DR/CR later
+                    'type' => $mItem['type'] ?? 'auto',
                 ];
 
                 if ($amount !== null && $amount > 0) {
@@ -123,7 +123,7 @@ class JournalEntryService
                     'description' => $oItem['description'] ?? $data['description'],
                     'debit' => 0,
                     'credit' => 0,
-                    'type' => $oItem['type'] ?? 'auto'
+                    'type' => $oItem['type'] ?? 'auto',
                 ];
 
                 if ($amount !== null && $amount > 0) {
@@ -162,7 +162,7 @@ class JournalEntryService
                     'account_id' => $item['account_id'],
                     'debit' => $item['debit'],
                     'credit' => $item['credit'],
-                    'description' => $item['description']
+                    'description' => $item['description'],
                 ];
             }, $items);
 
@@ -178,10 +178,59 @@ class JournalEntryService
         });
     }
 
+    public function updateEntry(JournalEntry $entry, array $data): JournalEntry
+    {
+        return DB::transaction(function () use ($entry, $data) {
+            if (isset($data['date']) && $data['date'] !== $entry->date) {
+                // 1. Validate Fiscal Year for New Date
+                $fiscalYear = FiscalYear::where('company_id', $entry->company_id)
+                    ->where('start_date', '<=', $data['date'])
+                    ->where('end_date', '>=', $data['date'])
+                    ->first();
+
+                if (!$fiscalYear) {
+                    throw new Exception("No open fiscal year found for date: " . $data['date']);
+                }
+
+                if ($fiscalYear->is_closed) {
+                    throw new Exception("The fiscal year is closed.");
+                }
+                
+                $entry->date = $data['date'];
+                $entry->fiscal_year_id = $fiscalYear->id;
+            }
+
+            if (isset($data['description'])) {
+                $entry->description = $data['description'];
+            }
+
+            if (isset($data['reference'])) {
+                $entry->reference = $data['reference'];
+            }
+
+            $entry->save();
+
+            return $entry;
+        });
+    }
+
     private function generateEntryNumber($companyId): string
     {
-        // Simple sequential number generator
-        $count = JournalEntry::where('company_id', $companyId)->count();
-        return 'JE-' . date('Y') . '-' . str_pad($count + 1, 5, '0', STR_PAD_LEFT);
+        $year = date('Y');
+        $prefix = "JE-{$year}-";
+
+        $lastEntry = JournalEntry::where('company_id', $companyId)
+            ->where('entry_number', 'like', $prefix . '%')
+            ->orderBy('entry_number', 'desc')
+            ->first();
+
+        $nextNumber = 1;
+        if ($lastEntry) {
+            // Extract the number part from the end of the entry_number string
+            $lastNumberStr = str_replace($prefix, '', $lastEntry->entry_number);
+            $nextNumber = (int)$lastNumberStr + 1;
+        }
+
+        return $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
     }
 }

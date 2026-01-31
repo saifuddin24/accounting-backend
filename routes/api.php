@@ -40,6 +40,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/journals', [JournalEntryController::class, 'store']);
     Route::post('/journals/quick', [JournalEntryController::class, 'storeQuick']);
     Route::get('/journals/{id}', [JournalEntryController::class, 'show']);
+    Route::put('/journals/{id}', [JournalEntryController::class, 'update']);
     Route::delete('/journals/{id}', [JournalEntryController::class, 'destroy']);
 
     // Reports

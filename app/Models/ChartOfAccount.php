@@ -23,10 +23,12 @@ class ChartOfAccount extends Model
         'normal_balance', // debit, credit
         'description',
         'is_active',
+        'is_restricted',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_restricted' => 'boolean',
     ];
 
     public function company(): BelongsTo
