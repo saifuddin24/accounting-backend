@@ -23,6 +23,8 @@ class JournalEntryController extends Controller
         $sortBy = $request->query('sort_by', 'date');
         $sortOrder = $request->query('sort_order', 'desc');
         $perPage = $request->query('per_page', 20);
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
 
         $query = JournalEntry::with('items.account');
 
@@ -31,6 +33,13 @@ class JournalEntryController extends Controller
                  $q->where('description', 'like', "%{$search}%")
                    ->orWhere('entry_number', 'like', "%{$search}%");
              });
+        }
+
+        if ($startDate) {
+            $query->where('date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->where('date', '<=', $endDate);
         }
         
         // Allowed sort columns
@@ -51,6 +60,8 @@ class JournalEntryController extends Controller
         $sortBy = $request->query('sort_by', 'date');
         $sortOrder = $request->query('sort_order', 'desc');
         $perPage = $request->query('per_page', 20);
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
 
         // Join with Journal Entries to get Date and Entry Number
         $query = DB::table('journal_items')
@@ -72,6 +83,13 @@ class JournalEntryController extends Controller
                    ->orWhere('journal_entries.entry_number', 'like', "%{$search}%")
                    ->orWhere('chart_of_accounts.name', 'like', "%{$search}%");
              });
+        }
+
+        if ($startDate) {
+            $query->where('journal_entries.date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->where('journal_entries.date', '<=', $endDate);
         }
 
         // Sorting
