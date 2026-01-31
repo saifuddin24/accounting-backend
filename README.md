@@ -1,6 +1,6 @@
 # Simple Accounting API
 
-**Version: 1.0.0**
+**Version: 1.0.1**
 
 This is the backend for the Simple Accounting system. It's a RESTful API built with Laravel 12.
 
@@ -8,9 +8,9 @@ This is the backend for the Simple Accounting system. It's a RESTful API built w
 
 This API manages the core accounting logic, including:
 
--   **Chart of Accounts**: Hierarchical accounting categories (Assets, Liabilities, Equity, Income, Expenses).
--   **Journal Entries**: Double-entry bookkeeping records.
--   **Fiscal Years & Companies**: Multi-tenant or multi-period support.
+- **Chart of Accounts**: Hierarchical accounting categories (Assets, Liabilities, Equity, Income, Expenses).
+- **Journal Entries**: Double-entry bookkeeping records.
+- **Fiscal Years & Companies**: Multi-tenant or multi-period support.
 
 ## Getting Started
 
@@ -20,15 +20,24 @@ For detailed installation and database setup instructions, please refer to the:
 
 ## Tech Stack
 
--   **Framework**: Laravel 12
--   **PHP**: ^8.2
--   **Database**: Works with MySQL, PostgreSQL, or SQLite.
+- **Framework**: Laravel 12
+- **PHP**: ^8.2
+- **Database**: Works with MySQL, PostgreSQL, or SQLite.
+
+## Changelog
+
+### Version 1.0.1 (2026-01-31)
+
+- Added support for individual journal item descriptions.
+- Improved journal entry create/edit validation logic.
+- Enhanced API endpoints for reporting and filtering.
+- Fixed duplicate entry errors for journal numbers.
 
 ## Key Features
 
--   Clean Architecture (Services, Controllers, Models).
--   Automated database migrations and seeding for quick starts.
--   Standardized API responses.
+- Clean Architecture (Services, Controllers, Models).
+- Automated database migrations and seeding for quick starts.
+- Standardized API responses.
 
 ## License
 

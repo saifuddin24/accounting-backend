@@ -1,7 +1,7 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
     "name": "saifuddin24/accounting-backend",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "type": "project",
     "description": "Simple Accounting API",
     "keywords": [
