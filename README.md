@@ -1,6 +1,6 @@
 # Simple Accounting API
 
-**Version: 1.0.1**
+**Version: 1.0.2**
 
 This is the backend for the Simple Accounting system. It's a RESTful API built with Laravel 12.
 
