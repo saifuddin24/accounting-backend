@@ -15,6 +15,7 @@ class JournalEntry extends Model
 
     protected $fillable = [
         'profile_id',
+        'contact_id',
         'fiscal_year_id',
         'entry_number',
         'date',
@@ -37,6 +38,11 @@ class JournalEntry extends Model
     public function fiscalYear(): BelongsTo
     {
         return $this->belongsTo(FiscalYear::class);
+    }
+
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class);
     }
 
     public function items(): HasMany

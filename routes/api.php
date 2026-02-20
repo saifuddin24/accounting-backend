@@ -8,6 +8,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FiscalYearController;
+use App\Http\Controllers\ContactController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -33,6 +34,13 @@ Route::prefix('v1')->group(function () {
     // Accounts
     Route::get('/accounts', [ChartOfAccountController::class, 'index']);
     Route::post('/accounts', [ChartOfAccountController::class, 'store']);
+
+    // Contacts
+    Route::get('/contacts', [ContactController::class, 'index']);
+    Route::post('/contacts', [ContactController::class, 'store']);
+    Route::get('/contacts/{id}', [ContactController::class, 'show']);
+    Route::put('/contacts/{id}', [ContactController::class, 'update']);
+    Route::delete('/contacts/{id}', [ContactController::class, 'destroy']);
 
     // Journal Entries
     Route::get('/journals', [JournalEntryController::class, 'index']);
