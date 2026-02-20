@@ -9,15 +9,15 @@ use Illuminate\Support\Facades\DB;
 
 class WorksheetService
 {
-    public function getWorksheet($companyId, $date)
+    public function getWorksheet($profileId, $date)
     {
         $asOfDate = Carbon::parse($date);
 
-        $balances = JournalItem::whereHas('journalEntry', function($q) use ($asOfDate, $companyId) {
-                $q->where('company_id', $companyId)
-                  ->where('date', '<=', $asOfDate->format('Y-m-d'))
-                  ->where('status', 'posted');
-            })
+        $balances = JournalItem::whereHas('journalEntry', function ($q) use ($asOfDate, $profileId) {
+            $q->where('profile_id', $profileId)
+                ->where('date', '<=', $asOfDate->format('Y-m-d'))
+                ->where('status', 'posted');
+        })
             ->select(
                 'account_id',
                 DB::raw('SUM(debit) as total_debit'),
@@ -27,15 +27,18 @@ class WorksheetService
             ->get()
             ->keyBy('account_id');
 
-        $accounts = ChartOfAccount::where('company_id', $companyId)
+        $accounts = ChartOfAccount::where('profile_id', $profileId)
             ->orderBy('code')
             ->get();
 
         $lines = [];
         $totals = [
-            'tb_debit' => 0, 'tb_credit' => 0,
-            'is_debit' => 0, 'is_credit' => 0,
-            'bs_debit' => 0, 'bs_credit' => 0,
+            'tb_debit' => 0,
+            'tb_credit' => 0,
+            'is_debit' => 0,
+            'is_credit' => 0,
+            'bs_debit' => 0,
+            'bs_credit' => 0,
         ];
 
         foreach ($accounts as $account) {

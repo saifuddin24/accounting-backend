@@ -6,7 +6,7 @@ use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\JournalEntryController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FiscalYearController;
 
 Route::get('/user', function (Request $request) {
@@ -15,11 +15,11 @@ Route::get('/user', function (Request $request) {
 
 // Public API for now
 Route::prefix('v1')->group(function () {
-    // Companies
-    Route::get('/companies', [CompanyController::class, 'index']);
-    Route::post('/companies', [CompanyController::class, 'store']);
-    Route::get('/companies/{id}', [CompanyController::class, 'show']);
-    Route::put('/companies/{id}', [CompanyController::class, 'update']);
+    // Profiles
+    Route::get('/profiles', [ProfileController::class, 'index']);
+    Route::post('/profiles', [ProfileController::class, 'store']);
+    Route::get('/profiles/{id}', [ProfileController::class, 'show']);
+    Route::put('/profiles/{id}', [ProfileController::class, 'update']);
 
     // Fiscal Years
     Route::get('/fiscal-years', [FiscalYearController::class, 'index']);
@@ -29,7 +29,7 @@ Route::prefix('v1')->group(function () {
 
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
-    
+
     // Accounts
     Route::get('/accounts', [ChartOfAccountController::class, 'index']);
     Route::post('/accounts', [ChartOfAccountController::class, 'store']);
@@ -51,7 +51,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/reports/worksheet', [ReportController::class, 'getWorksheet']);
 
     // Helper
-    Route::get('/ping', function() {
+    Route::get('/ping', function () {
         return response()->json(['message' => 'Pong', 'time' => now()]);
     });
 });

@@ -9,16 +9,16 @@ use Illuminate\Support\Facades\DB;
 
 class BalanceSheetService
 {
-    public function getBalanceSheet($companyId, $date)
+    public function getBalanceSheet($profileId, $date)
     {
         $asOfDate = Carbon::parse($date);
 
         // 1. Get all balances up to $asOfDate
-        $balances = JournalItem::whereHas('journalEntry', function($q) use ($asOfDate, $companyId) {
-                $q->where('company_id', $companyId)
-                  ->where('date', '<=', $asOfDate->format('Y-m-d'))
-                  ->where('status', 'posted');
-            })
+        $balances = JournalItem::whereHas('journalEntry', function ($q) use ($asOfDate, $profileId) {
+            $q->where('profile_id', $profileId)
+                ->where('date', '<=', $asOfDate->format('Y-m-d'))
+                ->where('status', 'posted');
+        })
             ->select(
                 'account_id',
                 DB::raw('SUM(debit) as total_debit'),
@@ -28,14 +28,14 @@ class BalanceSheetService
             ->get()
             ->keyBy('account_id');
 
-        $accounts = ChartOfAccount::where('company_id', $companyId)
+        $accounts = ChartOfAccount::where('profile_id', $profileId)
             ->orderBy('code')
             ->get();
 
         $assets = [];
         $liabilities = [];
         $equity = [];
-        
+
         $totalAssets = 0;
         $totalLiabilities = 0;
         $totalEquity = 0;
@@ -51,17 +51,17 @@ class BalanceSheetService
             if ($account->type === 'Asset') {
                 $amount = $debit - $credit;
                 $restrictedAmount = $account->is_restricted ? $amount : 0;
-                
+
                 if ($amount != 0) {
                     $assets[] = [
-                        'account_code' => $account->code, 
-                        'account_name' => $account->name, 
+                        'account_code' => $account->code,
+                        'account_name' => $account->name,
                         'amount' => $amount,
                         'is_restricted' => $account->is_restricted,
                         'restricted_amount' => $restrictedAmount
                     ];
                     $totalAssets += $amount;
-                    
+
                     if ($account->is_restricted) {
                         $totalRestrictedAssets += $amount;
                     } else {

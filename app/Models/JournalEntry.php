@@ -7,14 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-use App\Traits\HasCompany;
+use App\Traits\HasProfile;
 
 class JournalEntry extends Model
 {
-    use HasFactory, HasCompany;
+    use HasFactory, HasProfile;
 
     protected $fillable = [
-        'company_id',
+        'profile_id',
         'fiscal_year_id',
         'entry_number',
         'date',
@@ -29,9 +29,9 @@ class JournalEntry extends Model
         'total_amount' => 'decimal:2',
     ];
 
-    public function company(): BelongsTo
+    public function profile(): BelongsTo
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Profile::class);
     }
 
     public function fiscalYear(): BelongsTo

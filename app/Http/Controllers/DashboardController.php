@@ -16,7 +16,7 @@ class DashboardController extends Controller
 
     public function getStats(Request $request)
     {
-        $companyId = config('app.company_id');
+        $companyId = config('accounting.profile_id');
         try {
             $stats = $this->dashboardService->getDashboardStats($companyId);
             return response()->json($stats);

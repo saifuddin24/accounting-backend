@@ -6,14 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-use App\Traits\HasCompany;
+use App\Traits\HasProfile;
 
 class FiscalYear extends Model
 {
-    use HasFactory, HasCompany;
+    use HasFactory, HasProfile;
 
     protected $fillable = [
-        'company_id',
+        'profile_id',
         'name',
         'start_date',
         'end_date',
@@ -26,8 +26,8 @@ class FiscalYear extends Model
         'is_closed' => 'boolean',
     ];
 
-    public function company(): BelongsTo
+    public function profile(): BelongsTo
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Profile::class);
     }
 }

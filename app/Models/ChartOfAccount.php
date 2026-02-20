@@ -7,14 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-use App\Traits\HasCompany;
+use App\Traits\HasProfile;
 
 class ChartOfAccount extends Model
 {
-    use HasFactory, HasCompany;
+    use HasFactory, HasProfile;
 
     protected $fillable = [
-        'company_id',
+        'profile_id',
         'code',
         'name',
         'type', // Asset, Liability, Equity, Income, Expense
@@ -31,9 +31,9 @@ class ChartOfAccount extends Model
         'is_restricted' => 'boolean',
     ];
 
-    public function company(): BelongsTo
+    public function profile(): BelongsTo
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Profile::class);
     }
 
     public function parent(): BelongsTo

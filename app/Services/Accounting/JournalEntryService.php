@@ -12,7 +12,7 @@ class JournalEntryService
 {
     /**
      * Post a new journal entry with strict validation.
-     * 
+     *
      * @param array $data
      * @return JournalEntry
      * @throws Exception
@@ -22,7 +22,7 @@ class JournalEntryService
         return DB::transaction(function () use ($data) {
             // 1. Validate Fiscal Year
             // In a real app, find the FY based on the date
-            $fiscalYear = FiscalYear::where('company_id', $data['company_id'])
+            $fiscalYear = FiscalYear::where('profile_id', $data['profile_id'])
                 ->where('start_date', '<=', $data['date'])
                 ->where('end_date', '>=', $data['date'])
                 ->first();
@@ -43,7 +43,7 @@ class JournalEntryService
                 $totalDebit += $item['debit'] ?? 0;
                 $totalCredit += $item['credit'] ?? 0;
             }
-            
+
             // Use epsilon for float comparison safety (though we use decimals strings usually)
             if (abs($totalDebit - $totalCredit) > 0.01) {
                 throw new Exception("Journal Entry is not balanced. Debit: {$totalDebit}, Credit: {$totalCredit}");
@@ -51,9 +51,9 @@ class JournalEntryService
 
             // 3. Create Entry Header
             $entry = JournalEntry::create([
-                'company_id' => $data['company_id'],
+                'profile_id' => $data['profile_id'],
                 'fiscal_year_id' => $fiscalYear->id,
-                'entry_number' => $this->generateEntryNumber($data['company_id']),
+                'entry_number' => $this->generateEntryNumber($data['profile_id']),
                 'date' => $data['date'],
                 'description' => $data['description'],
                 'reference' => $data['reference'] ?? null,
@@ -79,7 +79,7 @@ class JournalEntryService
     {
         return DB::transaction(function () use ($data) {
             $mainAccountId = $data['main_account_id'];
-            $oppositeItemsInput = $data['opposite_items']; 
+            $oppositeItemsInput = $data['opposite_items'];
             $mainAccountItemsInput = $data['main_account_items'] ?? [];
 
             $items = [];
@@ -146,7 +146,7 @@ class JournalEntryService
                 // If multiple null items, we distribute to the first one found
                 $target = $nullItems[0];
                 $absDiff = abs($diff);
-                
+
                 if ($diff > 0) {
                     // Need more credit
                     $items[$target['index']]['credit'] = $absDiff;
@@ -157,7 +157,7 @@ class JournalEntryService
             }
 
             // 4. Final check & format for createEntry
-            $finalItems = array_map(function($item) {
+            $finalItems = array_map(function ($item) {
                 return [
                     'account_id' => $item['account_id'],
                     'debit' => $item['debit'],
@@ -167,7 +167,7 @@ class JournalEntryService
             }, $items);
 
             $entryData = [
-                'company_id' => $data['company_id'],
+                'profile_id' => $data['profile_id'],
                 'date' => $data['date'],
                 'description' => $data['description'],
                 'items' => $finalItems,
@@ -183,7 +183,7 @@ class JournalEntryService
         return DB::transaction(function () use ($entry, $data) {
             if (isset($data['date']) && $data['date'] !== $entry->date) {
                 // 1. Validate Fiscal Year for New Date
-                $fiscalYear = FiscalYear::where('company_id', $entry->company_id)
+                $fiscalYear = FiscalYear::where('profile_id', $entry->profile_id)
                     ->where('start_date', '<=', $data['date'])
                     ->where('end_date', '>=', $data['date'])
                     ->first();
@@ -195,7 +195,7 @@ class JournalEntryService
                 if ($fiscalYear->is_closed) {
                     throw new Exception("The fiscal year is closed.");
                 }
-                
+
                 $entry->date = $data['date'];
                 $entry->fiscal_year_id = $fiscalYear->id;
             }
@@ -214,12 +214,12 @@ class JournalEntryService
         });
     }
 
-    private function generateEntryNumber($companyId): string
+    private function generateEntryNumber($profileId): string
     {
         $year = date('Y');
         $prefix = "JE-{$year}-";
 
-        $lastEntry = JournalEntry::where('company_id', $companyId)
+        $lastEntry = JournalEntry::where('profile_id', $profileId)
             ->where('entry_number', 'like', $prefix . '%')
             ->orderBy('entry_number', 'desc')
             ->first();

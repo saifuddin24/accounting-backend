@@ -25,7 +25,7 @@ class ChartOfAccountController extends Controller
             'is_restricted' => 'nullable|boolean',
         ]);
 
-        $validated['company_id'] = config('app.company_id');
+        $validated['profile_id'] = config('accounting.profile_id');
 
         $account = ChartOfAccount::create($validated);
         return response()->json($account, 201);

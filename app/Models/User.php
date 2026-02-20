@@ -23,6 +23,13 @@ class User extends Authenticatable
         'password',
     ];
 
+    public function profiles(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Profile::class, 'profile_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

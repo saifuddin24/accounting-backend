@@ -9,16 +9,16 @@ use Illuminate\Support\Facades\DB;
 
 class IncomeStatementService
 {
-    public function getIncomeStatement($companyId, $startDate, $endDate)
+    public function getIncomeStatement($profileId, $startDate, $endDate)
     {
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
 
-        $balances = JournalItem::whereHas('journalEntry', function($q) use ($start, $end, $companyId) {
-                $q->where('company_id', $companyId)
-                  ->whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
-                  ->where('status', 'posted');
-            })
+        $balances = JournalItem::whereHas('journalEntry', function ($q) use ($start, $end, $profileId) {
+            $q->where('profile_id', $profileId)
+                ->whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+                ->where('status', 'posted');
+        })
             ->select(
                 'account_id',
                 DB::raw('SUM(debit) as total_debit'),
@@ -28,7 +28,7 @@ class IncomeStatementService
             ->get()
             ->keyBy('account_id');
 
-        $accounts = ChartOfAccount::where('company_id', $companyId)
+        $accounts = ChartOfAccount::where('profile_id', $profileId)
             ->whereIn('type', ['Income', 'Expense'])
             ->orderBy('code')
             ->get();
@@ -44,7 +44,7 @@ class IncomeStatementService
 
             $debit = $balance->total_debit;
             $credit = $balance->total_credit;
-            
+
             if ($account->type === 'Income') {
                 $amount = $credit - $debit;
                 if ($amount == 0) continue;

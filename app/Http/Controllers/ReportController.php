@@ -18,7 +18,7 @@ class ReportController extends Controller
     protected $worksheetService;
 
     public function __construct(
-        LedgerService $ledgerService, 
+        LedgerService $ledgerService,
         TrialBalanceService $trialBalanceService,
         IncomeStatementService $incomeStatementService,
         BalanceSheetService $balanceSheetService,
@@ -49,7 +49,7 @@ class ReportController extends Controller
     public function getTrialBalance(Request $request)
     {
         $date = $request->query('date');
-        $companyId = config('app.company_id');
+        $companyId = config('accounting.profile_id');
 
         try {
             $report = $this->trialBalanceService->getTrialBalance($companyId, $date);
@@ -63,7 +63,7 @@ class ReportController extends Controller
     {
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
-        $companyId = config('app.company_id');
+        $companyId = config('accounting.profile_id');
 
         try {
             $report = $this->incomeStatementService->getIncomeStatement($companyId, $startDate, $endDate);
@@ -76,7 +76,7 @@ class ReportController extends Controller
     public function getBalanceSheet(Request $request)
     {
         $date = $request->query('date');
-        $companyId = config('app.company_id');
+        $companyId = config('accounting.profile_id');
 
         try {
             $report = $this->balanceSheetService->getBalanceSheet($companyId, $date);
@@ -89,7 +89,7 @@ class ReportController extends Controller
     public function getWorksheet(Request $request)
     {
         $date = $request->query('date');
-        $companyId = config('app.company_id');
+        $companyId = config('accounting.profile_id');
 
         try {
             $report = $this->worksheetService->getWorksheet($companyId, $date);
@@ -99,4 +99,3 @@ class ReportController extends Controller
         }
     }
 }
-

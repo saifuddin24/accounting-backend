@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Company;
+use App\Models\Profile;
 use Illuminate\Http\Request;
 
-class CompanyController extends Controller
+class ProfileController extends Controller
 {
     public function index()
     {
-        return response()->json(Company::all());
+        return response()->json(Profile::all());
     }
 
     public function store(Request $request)
@@ -23,18 +23,18 @@ class CompanyController extends Controller
             'email' => 'nullable|email',
         ]);
 
-        $company = Company::create($validated);
+        $company = Profile::create($validated);
         return response()->json($company, 201);
     }
 
     public function show($id)
     {
-        return response()->json(Company::findOrFail($id));
+        return response()->json(Profile::findOrFail($id));
     }
 
     public function update(Request $request, $id)
     {
-        $company = Company::findOrFail($id);
+        $company = Profile::findOrFail($id);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'tax_id' => 'nullable|string|max:255',

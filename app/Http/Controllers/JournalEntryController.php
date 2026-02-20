@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\JournalEntry;
-use App\Models\Company;
 use App\Services\Accounting\JournalEntryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,10 +28,10 @@ class JournalEntryController extends Controller
         $query = JournalEntry::with('items.account');
 
         if ($search) {
-             $query->where(function($q) use ($search) {
-                 $q->where('description', 'like', "%{$search}%")
-                   ->orWhere('entry_number', 'like', "%{$search}%");
-             });
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                    ->orWhere('entry_number', 'like', "%{$search}%");
+            });
         }
 
         if ($startDate) {
@@ -41,12 +40,12 @@ class JournalEntryController extends Controller
         if ($endDate) {
             $query->where('date', '<=', $endDate);
         }
-        
+
         // Allowed sort columns
         if (in_array($sortBy, ['date', 'total_amount', 'entry_number', 'created_at'])) {
             $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
         }
-        
+
         $query->latest('id');
 
         $entries = $query->paginate($perPage);
@@ -67,7 +66,7 @@ class JournalEntryController extends Controller
         $query = DB::table('journal_items')
             ->join('journal_entries', 'journal_items.journal_entry_id', '=', 'journal_entries.id')
             ->join('chart_of_accounts', 'journal_items.account_id', '=', 'chart_of_accounts.id')
-            ->where('journal_entries.company_id', config('app.company_id'))
+            ->where('journal_entries.profile_id', config('accounting.profile_id'))
             ->select(
                 'journal_items.*',
                 'journal_entries.date',
@@ -78,11 +77,11 @@ class JournalEntryController extends Controller
             );
 
         if ($search) {
-             $query->where(function($q) use ($search) {
-                 $q->where('journal_entries.description', 'like', "%{$search}%")
-                   ->orWhere('journal_entries.entry_number', 'like', "%{$search}%")
-                   ->orWhere('chart_of_accounts.name', 'like', "%{$search}%");
-             });
+            $query->where(function ($q) use ($search) {
+                $q->where('journal_entries.description', 'like', "%{$search}%")
+                    ->orWhere('journal_entries.entry_number', 'like', "%{$search}%")
+                    ->orWhere('chart_of_accounts.name', 'like', "%{$search}%");
+            });
         }
 
         if ($startDate) {
@@ -95,13 +94,13 @@ class JournalEntryController extends Controller
         // Sorting
         if ($sortBy === 'date') {
             $query->orderBy('journal_entries.date', $sortOrder)
-                  ->orderBy('journal_entries.id', 'desc'); // Keep lines together
+                ->orderBy('journal_entries.id', 'desc'); // Keep lines together
         } elseif ($sortBy === 'amount') {
             // Sort by the max of debit or credit effectively
-             $query->orderBy(DB::raw('GREATEST(journal_items.debit, journal_items.credit)'), $sortOrder);
+            $query->orderBy(DB::raw('GREATEST(journal_items.debit, journal_items.credit)'), $sortOrder);
         } else {
             $query->orderBy('journal_entries.date', 'desc')
-                  ->orderBy('journal_entries.id', 'desc');
+                ->orderBy('journal_entries.id', 'desc');
         }
 
         $lines = $query->paginate($perPage);
@@ -120,7 +119,7 @@ class JournalEntryController extends Controller
             'items.*.credit' => 'nullable|numeric|min:0',
         ]);
 
-        $validated['company_id'] = config('app.company_id');
+        $validated['profile_id'] = config('accounting.profile_id');
 
         try {
             $entry = $this->service->createEntry($validated);
@@ -149,7 +148,7 @@ class JournalEntryController extends Controller
             'opposite_items.*.type' => 'required|in:debit,credit',
         ]);
 
-        $validated['company_id'] = config('app.company_id');
+        $validated['profile_id'] = config('accounting.profile_id');
 
         try {
             $entry = $this->service->createQuickEntry($validated);
